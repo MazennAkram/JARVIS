@@ -1,16 +1,16 @@
 import speech_recognition as sr
 
 
-State = 0
-# States:
-# sleeping = 0
-# Awake and listening = 1
-# Talking = 2
+SLEEPING = 0
+LISTENING = 1
+BUSY = 2
+STATE = SLEEPING
 
+UnknownValueError = "Couldn't understand command"
+RequestError = "Couldn't access API"
+recognizer = sr.Recognizer()
 
 def Listen_for_commands():
-    recognizer = sr.Recognizer()
-
     with sr.Microphone() as source: 
         print("Listening......")
         recognizer.adjust_for_ambient_noise(source)
@@ -19,28 +19,29 @@ def Listen_for_commands():
         command = recognizer.recognize_google(audio)
         return command.lower()
     except sr.UnknownValueError:
-        print("Couldn't understand command")
-        return None
+        return UnknownValueError
     except sr.RequestError:
-        print("Couldn't access API")
-        return None
+        return RequestError
 
-def controller(Command):
-    global State
-    if State == 0:
-        if "jarvis" in Command:
-            print("Yes sir")
-            State = 1
-            controller(Listen_for_commands())
-        else:
-            controller(Listen_for_commands())
-    elif State == 1:
-        print("taking commands and all")
-        print(Command)
-        State = 2
-        controller(Command)
-    elif State == 2:
-        print("doing the task and saying his reply")
-        State = 0
 
-controller(Listen_for_commands())
+def Controller(state, command):
+    order = command
+    if command == RequestError:
+        print(RequestError)
+    elif command == UnknownValueError:
+        print(UnknownValueError)
+    else:
+        if state == SLEEPING:
+            if "jarvis" in command:
+                print("Yes sir")
+                return LISTENING
+        elif state == LISTENING:
+                return BUSY
+        elif state == BUSY:
+            #it should run the order through the AI function
+            print(f"yes sir you wanted me to do {order}")
+
+while True:
+    if STATE != BUSY:
+        Command = Listen_for_commands()
+    STATE = Controller(STATE, Command)
